@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Upload & Face Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f8f8fc;
+      margin-top: 100px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 40px;
+      color: #333;
+    }
+
+    .button {
+      background-color: #e63946;
+      color: white;
+      padding: 15px 40px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background-color 0.3s;
+    }
+
+    .button:hover {
+      background-color: #d62828;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #555;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload your video</h1>
+
+  <form id="uploadForm" enctype="multipart/form-data">
+    <label for="videoInput" class="button">Select Video</label>
+    <input type="file" id="videoInput" name="video" accept="video/*" required>
+    <button type="submit" class="button" style="margin-top:20px;">Upload</button>
+  </form>
+
+  <h2 id="message">Only the person in the video can upload the video</h2>
+
+  <video id="webcam" width="400" autoplay style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const videoEl = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    const form = document.getElementById('uploadForm');
+    const messageEl = document.getElementById('message');
+
+    let stream;
+
+    // Access webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(s => { stream = s; videoEl.srcObject = stream; })
+      .catch(() => alert("Webcam access denied"));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      canvas.width = videoEl.videoWidth;
+      canvas.height = videoEl.videoHeight;
+      canvas.getContext('2d').drawImage(videoEl, 0, 0);
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+      const webcamFile = new File([blob], "webcam_face.jpg", { type: "image/jpeg" });
+
+      const formData = new FormData(form);
+      formData.append('webcam', webcamFile);
+
+      const response = await fetch('/upload', { method: 'POST', body: formData });
+      const data = await response.json();
+
+      messageEl.textContent = data.message || "Uploaded";
+      messageEl.style.color = (data.status === "success") ? "green" : "red";
+    });
+  </script>
+</body>
+</html>
