@@ -9,7 +9,6 @@ if face_cascade.empty():
     raise ValueError(f"Failed to load Haar cascade xml from {cascade_path}")
 
 def extract_face_from_video(video_path, save_path):
-    """Extract first face from video and save as image"""
     video = cv2.VideoCapture(video_path)
     face_detected = False
 
@@ -36,7 +35,7 @@ def verify_faces(video_face_path, webcam_face_path):
     webcam_enc = face_recognition.face_encodings(webcam_face)
 
     if len(video_enc) == 0 or len(webcam_enc) == 0:
-        return False  # No face detected
+        return False 
 
     result = face_recognition.compare_faces([video_enc[0]], webcam_enc[0])
     return result[0]
